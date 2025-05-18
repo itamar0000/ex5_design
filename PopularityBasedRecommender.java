@@ -18,12 +18,21 @@ class PopularityBasedRecommender<T extends Item> extends RecommenderSystem<T> {
     }
 
     public double getItemAverageRating(int itemId) {
+        //get over all Ratings
+        ratings.stream().collect(groupingBy(Rating::getItemId))
+        // find all the ratings with itemId
+        // get the sum of all ratings
+        // get the count of all ratings
+        // divide the sum by the count
         // TODO: implement
         return 0;
     }
     public int getItemRatingsCount(int itemId) {
+        return (int)ratings.stream() //RETURN LONG IN DEFAULT
+                .filter(rating -> rating.getItemId() == itemId)
+                .count();
         // TODO: implement
-        return 0;
+
     }
 
 }

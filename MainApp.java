@@ -38,7 +38,7 @@ public class MainApp {
                     int userId = Integer.parseInt(parts[0].trim());
                     int itemId = Integer.parseInt(parts[1].trim());
                     double rating = Double.parseDouble(parts[2].trim());
-                    return new Rating<>(userId, books.get(itemId), rating);
+                    return new Rating<Book>(userId,itemId, rating);
                 })
                 .toList();
         // TODO: initialize users, books and ratings
