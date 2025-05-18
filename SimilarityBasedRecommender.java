@@ -35,9 +35,8 @@ class SimilarityBasedRecommender<T extends Item> extends RecommenderSystem<T> {
         return 0;
     }
     public List<User> getMatchingProfileUsers(int userId) {
-        // look on users, for every user - go over all of his ratings, if the userId has rated the same item, add it to the list
-        // if the list has more then 10 items, add the user to the list
-        List<Integer> myitems = ratings.stream()
+        // Look at all users; for each user, check if they share 10+ rated items with the given user
+        List<Integer> myItems = ratings.stream()
                 .filter(r -> r.getUserId() == userId)
                 .map(Rating::getItemId)
                 .toList();
@@ -45,18 +44,19 @@ class SimilarityBasedRecommender<T extends Item> extends RecommenderSystem<T> {
         return users.values().stream()
                 .filter(user -> user.getId() != userId) // Exclude the specified user
                 .filter(user -> {
-                    // Count common items between this user and the specified user
                     long commonItemsCount = ratings.stream()
                             .filter(r -> r.getUserId() == user.getId())
                             .map(Rating::getItemId)
-                            .filter(myitems::contains)
+                            .filter(myItems::contains)
                             .distinct()
                             .count();
-
-                    return commonItemsCount>=10;
+                    return commonItemsCount >= 10;
+                })
+                .toList();
     }
 
-    @Override public List<T> recommendTop10(int userId){
+    @Override
+    public List<T> recommendTop10(int userId){
         // TODO: implement
         return null;
     }
