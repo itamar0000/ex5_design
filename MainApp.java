@@ -20,6 +20,27 @@ public class MainApp {
         testRecommenderSystem();
     }
     public static void initElements() throws IOException {
+        // Read users
+        users = Files.lines(Paths.get(USERS_PATH))
+                .map(User::new)
+                .collect(toMap(User::getId, u -> u));
+        // Read books
+        books = Files.lines(Paths.get(BOOKS_PATH))
+                .map(Book::new)
+                .collect(toMap(Book::getId, b -> b));
+        // Read ratings
+        ratings = Files.lines(Paths.get(RATINGS_PATH))
+                .map(line -> {
+                    String[] parts = line.split("\t");
+                    if (parts.length != 3) {
+                        throw new IllegalArgumentException("Invalid rating line: " + line);
+                    }
+                    int userId = Integer.parseInt(parts[0].trim());
+                    int itemId = Integer.parseInt(parts[1].trim());
+                    double rating = Double.parseDouble(parts[2].trim());
+                    return new Rating<>(userId, books.get(itemId), rating);
+                })
+                .toList();
         // TODO: initialize users, books and ratings
     }
     public static void testRecommenderSystem() {
