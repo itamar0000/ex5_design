@@ -15,24 +15,35 @@ class PopularityBasedRecommender<T extends Item> extends RecommenderSystem<T> {
     @Override
     public List<T> recommendTop10(int userId) {
         Set<Integer> itemsRatedByUser = ratingsByUser.getOrDefault(userId, Set.of()).stream()
-                .map(r -> r.getItemId())
+                .map(Rating::getItemId)
                 .collect(Collectors.toSet());
 
-        List<T> popularUnratedItems = ratingsByItem.entrySet().stream()
-                .filter(e -> e.getValue().size() > 100)
-                .map(Map.Entry::getKey)
-                .filter(itemId -> !itemsRatedByUser.contains(itemId))
-                .map(items::get)
+        return ratingsByItem.entrySet().stream()
+                .filter(e -> e.getValue().size() > POPULARITY_THRESHOLD) // Keep only popular items
+                .filter(e -> !itemsRatedByUser.contains(e.getKey()))    // Keep only unrated items
+                .sorted((e1, e2) -> {
+                    // Calculate average and count for first item (e1)
+                    double avg1 = e1.getValue().stream().mapToDouble(Rating::getRating).average().orElse(0.0);
+                    int count1 = e1.getValue().size();
+
+                    // Calculate average and count for second item (e2)
+                    double avg2 = e2.getValue().stream().mapToDouble(Rating::getRating).average().orElse(0.0);
+                    int count2 = e2.getValue().size();
+
+                    // Compare based on average rating (desc)
+                    int cmp = Double.compare(avg2, avg1);
+                    if (cmp != 0) return cmp;
+
+                    // If averages are equal, compare based on rating count (desc)
+                    cmp = Integer.compare(count2, count1);
+                    if (cmp != 0) return cmp;
+
+                    // If both average and count are equal, compare by item name
+                    return items.get(e1.getKey()).getName().compareTo(items.get(e2.getKey()).getName());
+                })
+                .limit(NUM_OF_RECOMMENDATIONS) // Take the top 10 items
+                .map(e -> items.get(e.getKey())) // Convert Map.Entry to Item
                 .collect(Collectors.toList());
-
-        Set<Integer> popularUnratedItemIds = popularUnratedItems.stream().map(item->item.getId()).collect(toSet());
-
-        Map<Integer, Double> averageRatingsForPopularUnratedItems = ratings.stream()
-                .filter(r -> popularUnratedItemIds.contains(r.getItem().getId())) // keep only relevant items
-                .collect(Collectors.groupingBy(
-                        r -> r.getItem().getId(),                      // group by item ID
-                        Collectors.averagingDouble(Rating::getRating)  // average rating
-                ));
     }
 
     public double getItemAverageRating(int itemId) {
@@ -49,7 +60,6 @@ class PopularityBasedRecommender<T extends Item> extends RecommenderSystem<T> {
         return (int)ratings.stream() //RETURN LONG IN DEFAULT
                 .filter(rating -> rating.getItemId() == itemId)
                 .count();
-        // TODO: implement
 
     }
 
