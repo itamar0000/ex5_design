@@ -11,7 +11,9 @@ abstract class RecommenderSystem<T extends Item> {
     protected final Map<Integer, T> items;
     protected final List<Rating<T>> ratings;
     // TODO: add data structures to make the operation more efficient / simpler
-    private final Map<Integer, Set<Rating<T>>> ratingsByUser;
+    protected final Map<Integer, Set<Rating<T>>> ratingsByUser;
+    protected final Map<Integer, Set<Rating<T>>> ratingsByItem;
+
 
 
     protected final int NUM_OF_RECOMMENDATIONS = 10;
@@ -24,6 +26,9 @@ abstract class RecommenderSystem<T extends Item> {
         this.ratings = ratings;
         this.ratingsByUser = ratings.stream()
                 .collect(groupingBy(r -> r.getUserId(),toSet()));
+        this.ratingsByItem = ratings.stream()
+                .collect(groupingBy(r -> r.getItemId(), toSet()));
+
 
         // TODO: initialize additional data structures
     }

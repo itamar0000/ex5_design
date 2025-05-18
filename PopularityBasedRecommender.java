@@ -1,4 +1,5 @@
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.*;
 
@@ -13,6 +14,25 @@ class PopularityBasedRecommender<T extends Item> extends RecommenderSystem<T> {
 
     @Override
     public List<T> recommendTop10(int userId) {
+        Set<Integer> itemsRatedByUser = ratingsByUser.getOrDefault(userId, Set.of()).stream()
+                .map(r -> r.getItemId())
+                .collect(Collectors.toSet());
+
+        List<T> popularUnratedItems = ratingsByItem.entrySet().stream()
+                .filter(e -> e.getValue().size() > 100)
+                .map(Map.Entry::getKey)
+                .filter(itemId -> !itemsRatedByUser.contains(itemId))
+                .map(items::get)
+                .collect(Collectors.toList());
+
+        Set<Integer> popularUnratedItemIds = popularUnratedItems.stream().map(item->item.getId()).collect(toSet());
+
+        Map<Integer, Double> averageRatingsForPopularUnratedItems = ratings.stream()
+                .filter(r -> popularUnratedItemIds.contains(r.getItem().getId())) // keep only relevant items
+                .collect(Collectors.groupingBy(
+                        r -> r.getItem().getId(),                      // group by item ID
+                        Collectors.averagingDouble(Rating::getRating)  // average rating
+                ));
     }
 
     public double getItemAverageRating(int itemId) {
