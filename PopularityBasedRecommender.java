@@ -13,9 +13,6 @@ class PopularityBasedRecommender<T extends Item> extends RecommenderSystem<T> {
 
     @Override
     public List<T> recommendTop10(int userId) {
-        // TODO: implement
-
-        return null;
     }
 
     public double getItemAverageRating(int itemId) {
