@@ -26,10 +26,14 @@ class PopularityBasedRecommender<T extends Item> extends RecommenderSystem<T> {
                 .average()
                 .orElse(0.0);
 
+
     }
     public int getItemRatingsCount(int itemId) {
+        return (int)ratings.stream() //RETURN LONG IN DEFAULT
+                .filter(rating -> rating.getItemId() == itemId)
+                .count();
         // TODO: implement
-        return 0;
+
     }
 
 }
