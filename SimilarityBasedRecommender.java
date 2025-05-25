@@ -112,25 +112,24 @@ class SimilarityBasedRecommender<T extends Item> extends RecommenderSystem<T> {
         List<Integer> similarUsers = getTop10SimilarUsers(userId);
         Set<Integer> ratedItems = getUserRatedItems(userId);
 
-        Map<Integer, Double> predictions = new HashMap<>();
-//TODO: CHANGE TO STREAMS
-        for (Integer itemId : ratingsByItem.keySet()) {
-            if (ratedItems.contains(itemId)) continue;
+        return ratingsByItem.keySet().stream()
+                .filter(itemId -> !ratedItems.contains(itemId))
+                .map(itemId -> {
+                    List<Rating<T>> relevantRatings = ratingsByItem.get(itemId).stream()
+                            .filter(r -> similarUsers.contains(r.getUserId()))
+                            .collect(Collectors.toList());
 
-            List<Rating<T>> relevantRatings = ratingsByItem.get(itemId).stream()
-                    .filter(r -> similarUsers.contains(r.getUserId()))
-                    .collect(Collectors.toList());
+                    if (relevantRatings.size() < 5) return null;
 
-            if (relevantRatings.size() < 5) continue;
+                    double predicted = predictRating(userId, itemId, relevantRatings);
+                    if (Double.isNaN(predicted)) return null;
 
-            double predicted = predictRating(userId, itemId, relevantRatings);
-            if (!Double.isNaN(predicted)) {
-                predictions.put(itemId, predicted);
-            }
-        }
-
-        return predictions;
+                    return Map.entry(itemId, predicted);
+                })
+                .filter(Objects::nonNull) // מסנן תוצאות null
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
+
 
     /**
      * Recommends the top 10 items for the user.
