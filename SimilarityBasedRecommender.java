@@ -113,10 +113,7 @@ class SimilarityBasedRecommender<T extends Item> extends RecommenderSystem<T> {
         Set<Integer> ratedItems = getUserRatedItems(userId);
 
         Map<Integer, Double> predictions = new HashMap<>();
-
-        Map<Integer, List<Rating<T>>> ratingsByItem = ratings.stream()
-                .collect(groupingBy(Rating::getItemId));
-
+//TODO: CHANGE TO STREAMS
         for (Integer itemId : ratingsByItem.keySet()) {
             if (ratedItems.contains(itemId)) continue;
 

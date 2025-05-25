@@ -37,6 +37,7 @@ class PopularityBasedRecommender<T extends Item> extends RecommenderSystem<T> {
                 .filter(e -> e.getValue().size() > 100) // Keep only popular items
                 .filter(e -> !itemsRatedByUser.contains(e.getKey())) // Keep only unrated items
                 .sorted((e1, e2) -> {
+                    //TODO: extract avg to a function
                     double avg1 = e1.getValue().stream().mapToDouble(Rating::getRating).average().orElse(0.0);
                     int count1 = e1.getValue().size();
 
@@ -63,11 +64,10 @@ class PopularityBasedRecommender<T extends Item> extends RecommenderSystem<T> {
      * @return average rating, or 0.0 if no ratings found
      */
     public double getItemAverageRating(int itemId) {
-        return ratings.stream()
-                .filter(r -> r.getItemId() == itemId)
+        return ratingsByItem.get(itemId).stream()
                 .mapToDouble(Rating::getRating)
                 .average()
-                .orElse(0.0);
+                .orElse(0);
     }
 
     /**
@@ -77,8 +77,7 @@ class PopularityBasedRecommender<T extends Item> extends RecommenderSystem<T> {
      * @return number of ratings
      */
     public int getItemRatingsCount(int itemId) {
-        return (int) ratings.stream()
-                .filter(rating -> rating.getItemId() == itemId)
+        return (int)ratingsByItem.get(itemId).stream()
                 .count();
     }
 

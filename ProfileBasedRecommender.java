@@ -32,15 +32,15 @@ class ProfileBasedRecommender<T extends Item> extends RecommenderSystem<T> {
         if (targetUser == null) return List.of();
 
         Set<Integer> itemsRatedByUser = getItemsRatedByUser(userId);
-        List<User> matchingUsers = getMatchingProfileUsers(userId);
-        Set<Integer> matchingUserIds = matchingUsers.stream()
-                .map(User::getId)
-                .collect(Collectors.toSet());
+        Set<Integer> matchingUserIds = getMatchingProfileUsers(userId).stream().map(User::getId).collect(toSet());
 
-        List<Rating<T>> matchingRatings = getRatingsByUsers(matchingUserIds);
-        Map<Integer, List<Rating<T>>> ratingsByItem = groupRatingsByItem(matchingRatings);
+        Map<Integer, List<Rating<T>>> itemToFilteredRatings = ratings.stream()
+                .filter(r -> matchingUserIds.contains(r.getUserId()))
+                .collect(groupingBy(Rating::getItemId));
 
-        return ratingsByItem.entrySet().stream()
+
+
+        return itemToFilteredRatings.entrySet().stream()
                 .filter(entry -> !itemsRatedByUser.contains(entry.getKey()))         // skip items already rated
                 .filter(entry -> entry.getValue().size() >= 5)                       // require at least 5 ratings
                 .map(entry -> {
@@ -55,8 +55,8 @@ class ProfileBasedRecommender<T extends Item> extends RecommenderSystem<T> {
                     int cmp = Double.compare(e2.getValue(), e1.getValue()); // avg rating descending
                     if (cmp != 0) return cmp;
 
-                    int count1 = ratingsByItem.get(e1.getKey().getId()).size();
-                    int count2 = ratingsByItem.get(e2.getKey().getId()).size();
+                    int count1 = itemToFilteredRatings.get(e1.getKey().getId()).size();
+                    int count2 = itemToFilteredRatings.get(e2.getKey().getId()).size();
                     cmp = Integer.compare(count2, count1); // count descending
                     if (cmp != 0) return cmp;
 
@@ -98,16 +98,6 @@ class ProfileBasedRecommender<T extends Item> extends RecommenderSystem<T> {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Groups a list of ratings by item ID.
-     *
-     * @param ratings the list of ratings
-     * @return map from item ID to list of ratings
-     */
-    private Map<Integer, List<Rating<T>>> groupRatingsByItem(List<Rating<T>> ratings) {
-        return ratings.stream()
-                .collect(groupingBy(Rating::getItemId));
-    }
 
     /**
      * Returns the set of item IDs that a user has already rated.
